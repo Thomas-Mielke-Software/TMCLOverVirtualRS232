@@ -17,6 +17,10 @@
             End If
         End If
 
+        ' Dim result
+        ' TMCM.sendTMCMCommand(9, 0, 7, 2, 0, result)
+        ' Console.WriteLine("")
+        ' Console.WriteLine("Result: " + result)
         Console.WriteLine("")
         Console.WriteLine("Press Enter to end program.")
         Console.ReadLine()
