@@ -17,11 +17,14 @@
             End If
         End If
 
-        ' Dim result
-        ' TMCM.sendTMCMCommand(9, 0, 7, 2, 0, result)
-        ' Console.WriteLine("")
-        ' Console.WriteLine("Result: " + result)
+        ' TMCM.
+
         Console.WriteLine("")
+        If TMCM.SendTMCMCommand(10, 0, 7, 2, 0) Then
+            Console.WriteLine("SendTMCMCommand returned true")
+        Else
+            Console.WriteLine("SendTMCMCommand returned false")
+        End If
         Console.WriteLine("Press Enter to end program.")
         Console.ReadLine()
 

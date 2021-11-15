@@ -28,9 +28,7 @@ namespace TMCLOverVirtualRS232
         private string _selectedPortName = "";
         public static SerialPort activePort = null;
         private static bool _isOpen = false;
-        private static bool _continue = false;
         public static SerialCOMPort activeInstance = null;
-        private byte[] readBuffer;
 
         /// <summary>
         /// Creates a new instance of this class
@@ -147,11 +145,11 @@ namespace TMCLOverVirtualRS232
 
             //try   -- let the outside world handle exceptions
             //{
-                if (_isOpen == false)
-                {
-                    activePort.Open();
-                    _isOpen = true;
-                }
+            if (_isOpen == false)
+            {
+                activePort.Open();
+                _isOpen = true;
+            }
             //}
             //catch (UnauthorizedAccessException uae)
             //{
@@ -164,15 +162,11 @@ namespace TMCLOverVirtualRS232
         /// send an array of bytes as TMCM command to the active COM Port
         /// </summary>
         /// <returns></returns>
-        public bool sendTMCMCommand(int cmdId, int anAddress, int aType, int aBank, int aValue, int result)
+        public int SendTMCMCommand(int cmdId, int anAddress, int aType, int aBank, int aValue)
         {
-            int actResult = 100;
-            int reqResult = result;
+            int result = -1;
             byte[] readBuffer = new byte[9];
             byte[] commandBytes = new byte[9];
-            _continue = false;
-
-            actResult = actResult + 0;
 
             if (activePort != null)
             {
@@ -185,43 +179,27 @@ namespace TMCLOverVirtualRS232
                     }
                     catch (Exception)
                     {
-                        _continue = false;
                         _isOpen = false;
                     }
                 }
                 if (_isOpen == true)
                 {
-                    commandBytes = SetTMCMCommand(cmdId, anAddress, aType, aBank, aValue);
+                    commandBytes = setTMCMCommand(cmdId, anAddress, aType, aBank, aValue);
                     // presentBytes(commandBytes);      // Test statement
 
                     activePort.Write(commandBytes, 0, 9);
-                    Thread.Sleep(10);
-                    activePort.Read(SerialCOMPort.activeInstance.readBuffer, 0, 9);
-                    actResult = Convert.ToInt32(SerialCOMPort.activeInstance.readBuffer[2]);
+                    Thread.Sleep(1000);
+                    activePort.Read(readBuffer, 0, 9);
+                    result = Convert.ToInt32(readBuffer[2]);
 
-                    if (result < 0)
-                    {
-                        // don't care
-                    }
-                    else
-                    {
-                        if (reqResult == actResult)
-                        {
-                            Console.WriteLine("SerialCOMPort 0298 execution successful - actual resultByte = " + actResult);
-                            _continue = true;
-                        }
-                        else
-                        {
-                            Console.WriteLine("SerialCOMPort 0300 execution erronous - actual resultByte = " + actResult);
-                            _continue = false;
-                        }
-                    }
+                    Console.WriteLine($"SendTMCMCommand execution successful -- result status code {result}: {interpretStatusCode(result)}");
                 }
+                    
             }
-            return _continue;
+            return result;
         }
 
-        public void presentBytes(byte[] commandBytes)
+        private void presentBytes(byte[] commandBytes)
         {
             Console.WriteLine("SerialCOMPort 0306 cammandBytes = [0] " + commandBytes[0] + ", [1] "
                                                                        + commandBytes[1] + ", [2] "
@@ -235,11 +213,21 @@ namespace TMCLOverVirtualRS232
         }
 
         /// <summary>
+        /// Close the active Port and set the indicator to false which is 'closed'
+        /// </summary>
+        /// <returns></returns>
+        public void CloseActivePort()
+        {
+            activePort.Close();
+            _isOpen = false;
+        }
+
+        /// <summary>
         /// Sets the TMCM command based on the instruction Id using the type and a value
         /// </summary>
         /// <param name="cmdId, anAddress, aType, intValue"></param>
         /// <returns></returns>
-        public byte[] SetTMCMCommand(int cmdId, int anAddress, int aType, int aBank, int intValue)
+        private byte[] setTMCMCommand(int cmdId, int anAddress, int aType, int aBank, int intValue)
         {
             byte aCmdIdByte = (byte)cmdId;
             byte[] theTMCMCommand = new byte[9];
@@ -264,7 +252,7 @@ namespace TMCLOverVirtualRS232
         /// set the command  bytes
         /// </summary>
         /// <returns></returns>
-        public byte[] setTheBytes(byte addressByte, byte aCmdIdByte, byte typeByte, byte aBankByte, byte[] valueBytes)
+        private byte[] setTheBytes(byte addressByte, byte aCmdIdByte, byte typeByte, byte aBankByte, byte[] valueBytes)
         {
             byte[] theTMCMCommand = new byte[9];
 
@@ -285,7 +273,7 @@ namespace TMCLOverVirtualRS232
         /// set the command  bytes
         /// </summary>
         /// <returns></returns>
-        public byte setTheCheckSum(byte[] theTMCMCommand)
+        private byte setTheCheckSum(byte[] theTMCMCommand)
         {
             uint checksum;
             byte checksumByte;
@@ -301,7 +289,7 @@ namespace TMCLOverVirtualRS232
         /// convert an integer into a  4 byte long byte array 
         /// </summary>
         /// <returns></returns>
-        public byte[] convertIntToBytes(int aInt)
+        private byte[] convertIntToBytes(int aInt)
         {
             int[] value = new int[4] { 0, 0, 0, 0 };    // integer with 32 valid bits
             char[] aChar = new char[4] { '0', '0', '0', '0' };   // integer with 32 valid bits
@@ -328,15 +316,20 @@ namespace TMCLOverVirtualRS232
             return byteArray;
         }
 
-        /// <summary>
-        /// Close the active Port and set the indicator to false which is 'closed'
-        /// </summary>
-        /// <returns></returns>
-        public void CloseActivePort()
+        private string interpretStatusCode(int status)
         {
-            activePort.Close();
-            _isOpen = false;
+		    switch (status)
+            {
+                case 100 : return "Success";
+                case 101: return "Command loaded";
+                case 1: return "Incorrect Checksum";
+                case 2: return "Invalid Command";
+                case 3: return "Wrong Type";
+                case 4: return "Invalid Value";
+                case 5: return "EEPROM Locked";
+                case 6: return "Command not Available";
+            }
+            return "Unknown Status Code";
         }
-
     }
 }
