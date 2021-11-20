@@ -8,7 +8,7 @@
         For Each port In ports
             If port.Substring(0, 3) <> "COM" Then Continue For
             If port.Substring(3, 1) < "1" Or port.Substring(3, 1) > "9" Then Continue For
-            Console.WriteLine("TMCM-6214 found on " + port)
+            Console.WriteLine("TMCM module found on " + port)
         Next
 
         If ports.Length > 0 Then

@@ -1,29 +1,19 @@
-# README #
+# TMCLOverVirtualRS232 #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+C# class library for Trinamic's TMCL serial interface for controlling TMCM stepper modules via a serial-to-rs485 converter.
 
-### What is this repository for? ###
+### How to use ###
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+Currently binds to .NET Framework 4.6.1 but should easily be adaptable to work with .NET 6 or as .NET Standard library.
 
-### How do I get set up? ###
+TMCLOverVirtualRS232Test is a VB console sample project, showing how to use the library.
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+### Credits ###
 
-### Contribution guidelines ###
+* Wolfgang Kurz, on whose work-in-progress code this library is based on 
+* Alan Pich & Christian Weickhmann, who wrote a [Python library](https://github.com/NativeDesign/python-tmcl) for the same purpose and from which I got some inspiration to finish TMCLOverVirtualRS232
+* MyCount GmbH for letting me open-source this
 
-* Writing tests
-* Code review
-* Other guidelines
+### License ###
 
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+All code released under LGPL 3.0. This basically means, you may release any software together with this library, but if you change the code of this library, you are obliged to release it under the same or a compatible license (see [here](LICENSE.md) for details). Pull requests welcome!
