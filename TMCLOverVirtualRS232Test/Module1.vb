@@ -20,7 +20,7 @@
         ' TMCM.
 
         Console.WriteLine("")
-        If TMCM.SendTMCMCommand(10, 0, 7, 2, 0) Then
+        If TMCM.SendTMCMCommand(9, 1, 1, 2, 1) Then
             Console.WriteLine("SendTMCMCommand returned true")
         Else
             Console.WriteLine("SendTMCMCommand returned false")

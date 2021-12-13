@@ -303,29 +303,10 @@ namespace TMCLOverVirtualRS232
         /// <returns></returns>
         private byte[] convertIntToBytes(int aInt)
         {
-            int[] value = new int[4] { 0, 0, 0, 0 };    // integer with 32 valid bits
-            char[] aChar = new char[4] { '0', '0', '0', '0' };   // integer with 32 valid bits
-            int[] val8b = new int[4] { 0, 0, 0, 0 };    // integer with 8 rightmost valid bits = 0 1o 255
-            uint theInt = (uint)aInt;
-            uint valTmp = theInt;
-            uint aTemp;
-
-            aTemp = (uint)aInt;
-
-            aChar[0] = Convert.ToChar(theInt >> 24);
-            valTmp = theInt << 8;
-            aChar[1] = Convert.ToChar(valTmp >> 24);
-            valTmp = theInt << 16;
-            aChar[2] = Convert.ToChar(valTmp >> 24);
-            valTmp = theInt << 24;
-            aTemp = (uint)valTmp >> 24;
-            aChar[3] = Convert.ToChar(aTemp >> 24);
-
-            byte[] byteArray = new byte[4] { Convert.ToByte(aChar[0]), Convert.ToByte(aChar[1]), Convert.ToByte(aChar[2]), Convert.ToByte(aChar[3]) };
-
-            // Console.WriteLine("0396 SerialCOMPort byteArray = " + byteArray[0] + "," + byteArray[1] + "," + byteArray[2] + "," + byteArray[3] ); // Test stetemnet
-
-            return byteArray;
+            byte[] intBytes = BitConverter.GetBytes(aInt);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(intBytes);    // convert to little endian byte order
+            return intBytes;
         }
 
         private string interpretStatusCode(int status)
