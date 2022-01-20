@@ -173,10 +173,15 @@ namespace TMCLOverVirtualRS232
         /// <summary>
         /// send an array of bytes as TMCM command to the active COM Port
         /// </summary>
-        /// <returns></returns>
+        /// <param name="cmdId">TMCL command like 9 for 'Set Global Parameter'</param>
+        /// <param name="anAddress">Address of the TMCM device</param>
+        /// <param name="aType">Type as submitted in byte 2 of the command buffer</param>
+        /// <param name="aBank">Motor bank</param>
+        /// <param name="aValue">32-bit value submitted in byte 4-7</param>
+        /// <returns>status code as from byte 2 of the response buffer</returns>
         public int SendTMCMCommand(int cmdId, int anAddress, int aType, int aBank, int aValue)
         {
-            int result = -1;
+            int result = -1000;
             byte[] readBuffer = new byte[9];
             byte[] commandBytes = new byte[9];
 
@@ -200,13 +205,65 @@ namespace TMCLOverVirtualRS232
                     // presentBytes(commandBytes);      // Test statement
 
                     activePort.Write(commandBytes, 0, 9);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(1);
                     activePort.Read(readBuffer, 0, 9);
                     result = Convert.ToInt32(readBuffer[2]);
 
-                    Console.WriteLine($"SendTMCMCommand execution successful -- result status code {result}: {interpretStatusCode(result)}");
+                    Console.WriteLine($"SendTMCMCommand execution successful -- result status code {result}: {InterpretStatusCode(result)}");
                 }
-                    
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// send an array of bytes as TMCM command to the active COM Port
+        /// </summary>
+        /// <param name="cmdId">TMCL command like 9 for 'Set Global Parameter'</param>
+        /// <param name="anAddress">Address of the TMCM device</param>
+        /// <param name="aType">Type as submitted in byte 2 of the command buffer</param>
+        /// <param name="aBank">Motor bank</param>
+        /// <param name="aValue">32-bit value submitted in byte 4-7</param>
+        /// <param name="aReturnedValue">32-bit value returned, for example if using cmdID 10 'Get Global Parameter'</param>
+        /// <returns>status code as from byte 2 of the response buffer</returns>
+        public int SendTMCMCommand(int cmdId, int anAddress, int aType, int aBank, int aValue, out int aReturnedValue)
+        {
+            int result = -1000;
+            aReturnedValue = 0;
+            byte[] readBuffer = new byte[9];
+            byte[] commandBytes = new byte[9];
+
+            if (activePort != null)
+            {
+                if (_isOpen == false)
+                {
+                    try
+                    {
+                        activePort.Open();
+                        _isOpen = true;
+                    }
+                    catch (Exception)
+                    {
+                        _isOpen = false;
+                    }
+                }
+                if (_isOpen == true)
+                {
+                    commandBytes = setTMCMCommand(cmdId, anAddress, aType, aBank, aValue);
+                    // presentBytes(commandBytes);      // Test statement
+
+                    activePort.Write(commandBytes, 0, 9);
+                    Thread.Sleep(1);
+                    activePort.Read(readBuffer, 0, 9);
+                    result = Convert.ToInt32(readBuffer[2]);
+                    var intValueInBytes = new byte[4];
+                    intValueInBytes[0] = readBuffer[4];
+                    intValueInBytes[1] = readBuffer[5];
+                    intValueInBytes[2] = readBuffer[6];
+                    intValueInBytes[3] = readBuffer[7];
+                    aReturnedValue = convertBytesToInt(intValueInBytes);
+
+                    Console.WriteLine($"SendTMCMCommand execution successful -- result status code {result}: {InterpretStatusCode(result)}");
+                }                    
             }
             return result;
         }
@@ -269,7 +326,7 @@ namespace TMCLOverVirtualRS232
             byte[] theTMCMCommand = new byte[9];
 
             theTMCMCommand[0] = addressByte;      // the target address
-            theTMCMCommand[1] = aCmdIdByte;             // the instruction number
+            theTMCMCommand[1] = aCmdIdByte;       // the instruction number
             theTMCMCommand[2] = typeByte;         // type
             theTMCMCommand[3] = aBankByte;        // motor bank 
             theTMCMCommand[4] = valueBytes[0];
@@ -298,18 +355,35 @@ namespace TMCLOverVirtualRS232
         }
 
         /// <summary>
-        /// convert an integer into a  4 byte long byte array 
+        /// convert an integer into a 4 byte long byte array 
         /// </summary>
         /// <returns></returns>
         private byte[] convertIntToBytes(int aInt)
         {
             byte[] intBytes = BitConverter.GetBytes(aInt);
             if (BitConverter.IsLittleEndian)
-                Array.Reverse(intBytes);    // convert to little endian byte order
+                Array.Reverse(intBytes);        // convert to little endian byte order
             return intBytes;
         }
 
-        private string interpretStatusCode(int status)
+        /// <summary>
+        /// convert 4 byte long byte array to integer 
+        /// </summary>
+        /// <returns></returns>
+        private int convertBytesToInt(byte[] aBuffer)
+        {
+            if (aBuffer.Length != 4) return 0;  // invalid buffersize
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(aBuffer);         // convert to little endian byte order
+            int i = BitConverter.ToInt32(aBuffer, 0);
+            return i;
+        }
+
+        /// <summary>
+        /// shows a string representation of the given status code
+        /// </summary>
+        /// <returns>human readable text</returns>
+        public string InterpretStatusCode(int status)
         {
 		    switch (status)
             {

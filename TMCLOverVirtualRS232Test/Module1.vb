@@ -17,14 +17,31 @@
             End If
         End If
 
-        ' TMCM.
+        ' TMCM
 
+        Dim status As Int32
+        Dim value As Int32
+
+        ' LED on
         Console.WriteLine("")
-        If TMCM.SendTMCMCommand(9, 1, 1, 2, 1) Then
-            Console.WriteLine("SendTMCMCommand returned true")
-        Else
-            Console.WriteLine("SendTMCMCommand returned false")
-        End If
+        status = TMCM.SendTMCMCommand(9, 1, 1, 2, 1)
+        Console.WriteLine("SendTMCMCommand returned " + TMCM.InterpretStatusCode(status))
+
+        ' check if LED is on
+        Console.WriteLine("")
+        status = TMCM.SendTMCMCommand(10, 1, 1, 2, 0, value)
+        Console.WriteLine("SendTMCMCommand returned " + TMCM.InterpretStatusCode(status) + " with value " + value.ToString())
+
+        ' LED on
+        Console.WriteLine("")
+        status = TMCM.SendTMCMCommand(9, 1, 1, 2, 7)
+        Console.WriteLine("SendTMCMCommand returned " + TMCM.InterpretStatusCode(status))
+
+        ' check if LED is off
+        Console.WriteLine("")
+        status = TMCM.SendTMCMCommand(10, 1, 1, 2, 0, value)
+        Console.WriteLine("SendTMCMCommand returned " + TMCM.InterpretStatusCode(status) + " with value " + value.ToString())
+
         Console.WriteLine("Press Enter to end program.")
         Console.ReadLine()
 
